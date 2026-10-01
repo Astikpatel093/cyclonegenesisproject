@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: cyclone-ai-python
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/system/status
+    envVars:
+      - key: CYCLONE_ALLOWED_ORIGINS
+        sync: false
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: OPENBLAS_NUM_THREADS
+        value: "1"

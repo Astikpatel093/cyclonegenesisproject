@@ -1,0 +1,18 @@
+{
+  "source": "Google Drive ERA5_Cyclone_Data",
+  "url": "https://drive.google.com/drive/folders/1u2a0bdOe1pFaF2qo7JIVMkMYfNlNiA5K",
+  "firstYear": 1990,
+  "lastYear": 2008,
+  "files": 1368,
+  "months": 228,
+  "variables": [
+    "SST",
+    "MSLP",
+    "10m_U_Wind",
+    "10m_V_Wind",
+    "2m_Temperature",
+    "2m_Dewpoint"
+  ],
+  "verification": "All 1368 local files match inventory sizes. January 1990 SST downloaded via authenticated Drive connector and SHA256 matched to local source. Other files were not freshly downloaded or remotely hash-verified.",
+  "sampleSha256": "0f76ea802e03261cad90da7c17b9fbd887a2ccd92a7f456d3a7a258b8b1368bc"
+}

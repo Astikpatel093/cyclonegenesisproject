@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+test_*.py
+.env
+.env.*
+*.log
+research_data/*.sqlite*
+research_data/*.db

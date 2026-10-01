@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env*
+base44/.app.jsonc
+__pycache__/
+*.pyc
+*.sqlite*
+*.db
