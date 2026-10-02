@@ -5,6 +5,7 @@ import type { ForecastPoint } from '../../types/prediction';
 
 interface PredictedTrackProps {
   forecastPoints: ForecastPoint[];
+  origin?: [number, number];
   visibleHorizon?: number; // show points up to this hour
   selectedStep?: number;
   onSelectPoint?: (point: ForecastPoint) => void;
@@ -12,6 +13,7 @@ interface PredictedTrackProps {
 
 export const PredictedTrack: React.FC<PredictedTrackProps> = ({
   forecastPoints,
+  origin,
   visibleHorizon = 120,
   selectedStep,
   onSelectPoint,
@@ -19,7 +21,7 @@ export const PredictedTrack: React.FC<PredictedTrackProps> = ({
   const visiblePoints = forecastPoints.filter(p => p.forecastHour <= visibleHorizon);
   if (!visiblePoints || visiblePoints.length === 0) return null;
 
-  const positions: [number, number][] = visiblePoints.map(p => [p.lat, p.lon]);
+  const positions: [number, number][] = [...(origin ? [origin] : []), ...visiblePoints.map(p => [p.lat, p.lon] as [number, number])];
 
   return (
     <>

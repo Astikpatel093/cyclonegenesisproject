@@ -1,0 +1,30 @@
+import { useEffect } from 'react';
+import { CircleMarker, Polyline, Tooltip, useMap } from 'react-leaflet';
+import type { PredictionResult } from '../../types/prediction';
+
+export function TrackComparison({ prediction, origin }: { prediction: PredictionResult; origin: [number, number] }) {
+  const map = useMap();
+  const actual = prediction.verification;
+  const forecast = prediction.forecastPoints.find(p => p.forecastHour === 24);
+  const track = prediction.actualTrack ?? [];
+  const boundsKey = JSON.stringify([origin, actual && [actual.lat, actual.lon], forecast && [forecast.lat, forecast.lon], ...track.map(p => [p.lat, p.lon])]);
+  useEffect(() => {
+    const points = JSON.parse(boundsKey).filter(Boolean) as [number, number][];
+    if (points.length > 1) map.fitBounds(points, { padding: [55, 55], maxZoom: 7, animate: false });
+  }, [boundsKey, map]);
+  if (!actual || !forecast) return null;
+  const rad = Math.PI / 180;
+  const a = Math.sin((actual.lat - forecast.lat) * rad / 2) ** 2 + Math.cos(actual.lat * rad) * Math.cos(forecast.lat * rad) * Math.sin((actual.lon - forecast.lon) * rad / 2) ** 2;
+  const errorKm = 6371 * 2 * Math.asin(Math.sqrt(Math.min(1, a)));
+  return <>
+    {track.length > 1 && <Polyline positions={track.map(p => [p.lat, p.lon])} pathOptions={{ color: '#16a34a', weight: 4 }}>
+      <Tooltip>Actual recorded track after issue time · IBTrACS</Tooltip>
+    </Polyline>}
+    <Polyline positions={[[forecast.lat, forecast.lon], [actual.lat, actual.lon]]} pathOptions={{ color: '#a855f7', weight: 2, dashArray: '3 5' }}>
+      <Tooltip permanent>Position error: {errorKm.toFixed(1)} km</Tooltip>
+    </Polyline>
+    <CircleMarker center={[actual.lat, actual.lon]} radius={7} pathOptions={{ color: '#15803d', fillColor: '#22c55e', fillOpacity: 1 }}>
+      <Tooltip permanent direction="bottom">Actual +24h: {actual.wind.toFixed(1)} kt · Wind error: {Math.abs(forecast.predictedWind - actual.wind).toFixed(1)} kt</Tooltip>
+    </CircleMarker>
+  </>;
+}

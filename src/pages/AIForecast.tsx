@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { TrackComparison } from '../components/maps/TrackComparison';
 import { Clock, ShieldCheck } from 'lucide-react';
 import { useCyclone } from '../hooks/useCyclone';
 import { usePredictions } from '../hooks/usePredictions';
@@ -188,7 +189,7 @@ export const AIForecast: React.FC = () => {
           <div className="flex justify-between items-center mb-3 pb-2 border-b border-[#1E3A5F]/60">
             <div>
               <h3 className="text-xs font-bold text-[#E6EDF5] uppercase tracking-wide">
-                Observed track & predicted endpoint (+{horizon}h)
+                Predicted vs actual track (+{horizon}h)
               </h3>
               <p className="text-[11px] text-[#94A3B8]">Observed solid cyan • Predicted dashed orange</p>
             </div>
@@ -213,11 +214,13 @@ export const AIForecast: React.FC = () => {
               {cyclone && <ObservedTrack track={cyclone.track} />}
               {filteredPoints.length > 0 && (
                 <PredictedTrack 
+                  origin={cyclone ? [cyclone.currentPosition.lat, cyclone.currentPosition.lon] : undefined}
                   forecastPoints={filteredPoints} 
                   selectedStep={selectedTimelineHour}
                   onSelectPoint={(p) => setSelectedTimelineHour(p.forecastHour)}
                 />
               )}
+              {cyclone && prediction?.cycloneId === cyclone.id && <TrackComparison prediction={prediction} origin={[cyclone.currentPosition.lat, cyclone.currentPosition.lon]} />}
               {cyclone ? (
                 <CycloneMarker 
                   position={[cyclone.currentPosition.lat, cyclone.currentPosition.lon]} 

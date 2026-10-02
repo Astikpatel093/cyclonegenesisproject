@@ -149,6 +149,13 @@ def predictions(storm_id:str):
     if mode!='replay': raise HTTPException(409,'Live prediction unavailable: the models use historical ERA5 + IBTrACS data from 1990–2008. Select a historical test case for a +24h prediction.')
     result=infer_case(case_id)
     if storm_id not in ['ACTIVE',result['stormId']]: raise HTTPException(404,'Select a matching test case before running this storm.')
+    # Verification observations are returned separately, never used as model inputs.
+    issue=pd.Timestamp(result['issuedAt'])
+    end=issue+pd.Timedelta(hours=24)
+    rows=archive[archive.SID==result['stormId']].copy()
+    times=pd.to_datetime(rows.ISO_TIME,utc=True)
+    actual=rows[(times>=issue)&(times<=end)].sort_values('ISO_TIME')
+    result={**result,'actualTrack':[point(r) for r in actual.to_dict('records')]}
     return {'status':200,'stormId':result['stormId'],'data':result}
 
 @app.get('/api/historical/catalog')

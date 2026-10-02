@@ -10,6 +10,19 @@ class ResearchContract(unittest.TestCase):
     def setUp(self): self.original=dict(api.state)
     def tearDown(self): api.state.update(self.original)
 
+    def test_comparison_track_matches_archive_window(self):
+        for case in api.case_records[::17]:
+            api.state.update(mode='replay',caseId=case['id'])
+            result=api.predictions('ACTIVE')['data']
+            track=result['actualTrack']
+            self.assertGreaterEqual(len(track),2)
+            start=pd.Timestamp(result['issuedAt'])
+            end=start+pd.Timedelta(hours=24)
+            self.assertTrue(all(start<=pd.Timestamp(p['timestamp'])<=end for p in track))
+            self.assertAlmostEqual(track[-1]['lat'],result['verification']['lat'],places=3)
+            self.assertAlmostEqual(track[-1]['lon'],result['verification']['lon'],places=3)
+            self.assertNotIn('actualTrack',api.infer_case(case['id']))
+
     def test_bundle_hashes(self):
         for path,expected in api.manifest['files'].items():
             self.assertEqual(hashlib.sha256((api.ROOT/path).read_bytes()).hexdigest(),expected,path)

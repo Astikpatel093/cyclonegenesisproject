@@ -30,6 +30,8 @@ export interface RapidIntensificationInfo {
 }
 
 export interface PredictionResult {
+  actualTrack?: {lat:number; lon:number; timestamp:string; windSpeed:number | null}[];
+  verification?: {lat:number; lon:number; wind:number; timestamp:string};
   cycloneId: string;
   predictionTime: string;
   modelVersion: string;
