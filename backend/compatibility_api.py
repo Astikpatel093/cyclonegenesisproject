@@ -7,10 +7,10 @@ import research_api as research
 app=FastAPI(title='Cyclone AI · preserved frontend integration')
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in os.getenv(
+    allow_origins=['https://cyclone-ai-53253190.base44.app', *[origin.strip() for origin in os.getenv(
         'CYCLONE_ALLOWED_ORIGINS',
         'http://127.0.0.1:3002,http://localhost:3002'
-    ).split(',') if origin.strip()],
+    ).split(',') if origin.strip()]],
     allow_methods=['GET','POST','DELETE','OPTIONS'],
     allow_headers=['Content-Type','X-Operator-Key','X-Subscription-Token'],
 )
