@@ -12,6 +12,7 @@ import xgboost as xgb
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from nio import sub_region, imd_classification
 
 ROOT = Path(__file__).parent / 'research_data'
 manifest = json.loads((ROOT/'manifest.json').read_text())
@@ -97,10 +98,12 @@ def live_observations():
             rows=rows.sort_values('ISO_TIME'); latest=pd.to_datetime(rows.ISO_TIME.iloc[-1],utc=True)
             if latest<cutoff or latest>pd.Timestamp.now(tz='UTC')+pd.Timedelta(hours=1): continue
             latest_wind=finite(rows.NEWDELHI_WIND.iloc[-1])
-            if latest_wind is None or latest_wind<34 or str(rows.NATURE.iloc[-1])!='TS': continue
+            region=sub_region(rows.LAT.iloc[-1], rows.LON.iloc[-1])
+            if region is None or latest_wind is None or latest_wind<17 or str(rows.NATURE.iloc[-1]) not in ['TS','DS']: continue
+            rows=rows[rows.LAT.between(5,26)&rows.LON.between(50,99)]
             pts=[point(r) for r in rows.to_dict('records')]
-            storms.append({'id':sid,'name':str(rows.NAME.iloc[-1]),'season':int(rows.SEASON.iloc[-1]),'basin':'NI','subBasin':str(rows.SUBBASIN.iloc[-1]),'status':'active','dataSource':'live','isReplay':False,'lastUpdated':pts[-1]['timestamp'],'currentPosition':pts[-1],'track':pts,'source':'NOAA IBTrACS ACTIVE · provisional, within 24h'})
-        result={'status':'LIVE' if storms else 'NO_ACTIVE_CYCLONE','active':bool(storms),'data':storms,'sources':['NOAA IBTrACS ACTIVE'],'lastChecked':now(),'monitoringRegion':'North Indian Ocean','environmentalBaseline':{},'message':'Latest provisional records; consult IMD for current operational status.'}
+            storms.append({'id':sid,'name':str(rows.NAME.iloc[-1]),'season':int(rows.SEASON.iloc[-1]),'basin':'NI','subBasin':str(rows.SUBBASIN.iloc[-1]),'sub_region':region,'imd_classification':imd_classification(latest_wind),'status':'active','dataSource':'live','isReplay':False,'lastUpdated':pts[-1]['timestamp'],'currentPosition':pts[-1],'track':pts,'source':'NOAA IBTrACS ACTIVE · provisional, within 24h'})
+        result={'status':'LIVE' if storms else 'NO_ACTIVE_CYCLONE','active':bool(storms),'data':storms,'sources':['NOAA IBTrACS ACTIVE'],'lastChecked':now(),'monitoringRegion':'Bay of Bengal and Arabian Sea (5–26°N, 50–99°E)','environmentalBaseline':{},'message':'Latest provisional records; consult IMD for current operational status.'}
     except Exception as exc:
         logging.getLogger(__name__).warning('NOAA observation fetch failed: %s: %s', type(exc).__name__, exc)
         result={'lastChecked':now(),'sources':['NOAA IBTrACS ACTIVE'],'errorType':type(exc).__name__,'status':'OFFLINE','active':False,'unavailable':True,'data':[],'message':'Current NOAA observations could not be verified. Check network access and retry, or select a 1990–2008 historical case.'}

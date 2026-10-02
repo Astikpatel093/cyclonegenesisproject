@@ -58,4 +58,29 @@ def optional_feature(storm_id:str,feature:str):
     if feature=='risk':return research.risk(storm_id)
     raise HTTPException(409,'No validated '+feature+' output is available. Follow official IMD and local authority guidance.')
 
+from fastapi.staticfiles import StaticFiles
+from nio import normalized_storm, sub_region
+from imd_satellite import fetch_imd_satellite, DIRECTORY
+
+@app.get('/api/nio/storms')
+def nio_storms():
+    result=research.live_observations()
+    if result.get('unavailable'):
+        raise HTTPException(503, result.get('message','Observation feed unavailable'))
+    output=[]
+    for storm in result['data']:
+        p=storm['currentPosition']; region=sub_region(p['lat'],p['lon'])
+        if region is None: continue
+        satellite=fetch_imd_satellite(region)
+        output.append(normalized_storm(storm,satellite['satellite_img_url']))
+    return output
+
+@app.get('/api/nio/satellite')
+def nio_satellite(region: str):
+    if region not in ['Bay of Bengal','Arabian Sea']:
+        raise HTTPException(422,'Choose Bay of Bengal or Arabian Sea')
+    return fetch_imd_satellite(region)
+
+DIRECTORY.mkdir(parents=True,exist_ok=True)
+app.mount('/static/images',StaticFiles(directory=str(DIRECTORY)),name='nio-images')
 app.mount('/',research.app)
